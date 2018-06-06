@@ -1,6 +1,6 @@
 'use strict';
 
-System.register([], function (_export, _context) {
+System.register(['./css/github-login.css!'], function (_export, _context) {
   "use strict";
 
   var _createClass, GitHubConfigCtrl;
@@ -12,7 +12,7 @@ System.register([], function (_export, _context) {
   }
 
   return {
-    setters: [],
+    setters: [function (_cssGithubLoginCss) {}],
     execute: function () {
       _createClass = function () {
         function defineProperties(target, props) {
@@ -41,26 +41,34 @@ System.register([], function (_export, _context) {
           _classCallCheck(this, GitHubConfigCtrl);
 
           this.url = 'https://github.com';
+          this.username = this.current.jsonData.username;
           this.clientId = this.current.jsonData.clientId || '511f57f0dc004d529286';
+          this.clientSecret = this.current.jsonData.clientSecret || '56da6358190eddc7100f2e3519a1b0d841fb6b38';
           this.state = 'abc123randomstringgnirtsmodnar321cba';
 
           var params = {
             client_id: this.clientId,
+            client_secret: this.clientSecret,
             allow_signup: 'false',
-            state: this.state
+            state: this.state,
+            scope: 'repo'
           };
 
           $scope.login = async function () {
             params.code = await _this.openOauthWindow($scope, $window, params);
             var result = await _this.getAccessToken(params);
+            _this.current.jsonData.oauthToken = result;
             console.log(result);
           };
         }
 
         _createClass(GitHubConfigCtrl, [{
           key: 'openOauthWindow',
-          value: function openOauthWindow($scope, $window, params) {
+          value: function openOauthWindow($scope, $window, allParams) {
             var _this2 = this;
+
+            var params = Object.assign({}, allParams);
+            delete params.client_secret;
 
             return new Promise(function (resolve, reject) {
               var url = _this2.url + '/login/oauth/authorize?' + Object.keys(params).map(function (p) {
@@ -91,8 +99,6 @@ System.register([], function (_export, _context) {
               method: 'POST',
               mode: 'cors'
             });
-            // console.log(response)
-            // return response;
             var json = await response.json();
             return json.access_token;
           }

@@ -3,16 +3,26 @@ import _ from "lodash";
 export class GitHubDatasource {
 
   constructor(instanceSettings, $q, backendSrv, templateSrv) {
+    this.url = 'https://api.github.com';
     this.type = instanceSettings.type;
     this.name = instanceSettings.name;
     this.q = $q;
     this.backendSrv = backendSrv;
     this.templateSrv = templateSrv;
     this.withCredentials = instanceSettings.withCredentials;
-    this.headers = {'Content-Type': 'application/json'};
-    if (typeof instanceSettings.basicAuth === 'string' && instanceSettings.basicAuth.length > 0) {
-      this.headers['Authorization'] = instanceSettings.basicAuth;
-    }
+
+    const jsonData = Object.assign({}, instanceSettings.jsonData);
+
+    this.credentials = {
+      oauthToken: jsonData.oauthToken,
+      clientId: jsonData.clientId,
+      username: jsonData.username
+    };
+
+    this.headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `token ${this.credentials.oauthToken}`
+    };
   }
 
   query(options) {
@@ -20,7 +30,7 @@ export class GitHubDatasource {
     query.targets = query.targets.filter(t => !t.hide);
 
     if (query.targets.length <= 0) {
-      return this.q.when({data: []});
+      return this.q.when({ data: [] });
     }
 
     return this.doRequest({
@@ -31,13 +41,11 @@ export class GitHubDatasource {
   }
 
   testDatasource() {
-    return this.doRequest({
-      url: this.url + '/',
-      method: 'GET',
-    }).then(response => {
-      if (response.status === 200) {
-        return { status: "success", message: "Data source is working", title: "Success" };
-      }
+    return new Promise((resolve, reject) => {
+      if(this.credentials.oauthToken !== undefined)
+        resolve({ status: 'success', message: 'GitHub datasource authenticated', title: "Success" });
+      else
+        reject({ status: 'error', message: 'Not authenticated' })
     });
   }
 

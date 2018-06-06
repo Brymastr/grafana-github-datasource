@@ -35,3 +35,6 @@ grafana
 
 # Test artifacts
 /dist/test/
+
+.DS_Store
+src/.DS_Store

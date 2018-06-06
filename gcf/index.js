@@ -13,13 +13,9 @@ exports.http = (req, res) => {
       return;
     }
 
-    const body = Object.assign({}, req.body, {
-      client_secret: process.env.CLIENT_SECRET || '56da6358190eddc7100f2e3519a1b0d841fb6b38'
-    });
-
     const url = `https://github.com/login/oauth/access_token`;
 
-    axios.post(url, body, { headers: {
+    axios.post(url, req.body, { headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     }}).then(result => {

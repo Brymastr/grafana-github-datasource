@@ -38,16 +38,26 @@ System.register(['lodash'], function (_export, _context) {
         function GitHubDatasource(instanceSettings, $q, backendSrv, templateSrv) {
           _classCallCheck(this, GitHubDatasource);
 
+          this.url = 'https://api.github.com';
           this.type = instanceSettings.type;
           this.name = instanceSettings.name;
           this.q = $q;
           this.backendSrv = backendSrv;
           this.templateSrv = templateSrv;
           this.withCredentials = instanceSettings.withCredentials;
-          this.headers = { 'Content-Type': 'application/json' };
-          if (typeof instanceSettings.basicAuth === 'string' && instanceSettings.basicAuth.length > 0) {
-            this.headers['Authorization'] = instanceSettings.basicAuth;
-          }
+
+          var jsonData = Object.assign({}, instanceSettings.jsonData);
+
+          this.credentials = {
+            oauthToken: jsonData.oauthToken,
+            clientId: jsonData.clientId,
+            username: jsonData.username
+          };
+
+          this.headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'token ' + this.credentials.oauthToken
+          };
         }
 
         _createClass(GitHubDatasource, [{
@@ -71,13 +81,10 @@ System.register(['lodash'], function (_export, _context) {
         }, {
           key: 'testDatasource',
           value: function testDatasource() {
-            return this.doRequest({
-              url: this.url + '/',
-              method: 'GET'
-            }).then(function (response) {
-              if (response.status === 200) {
-                return { status: "success", message: "Data source is working", title: "Success" };
-              }
+            var _this = this;
+
+            return new Promise(function (resolve, reject) {
+              if (_this.credentials.oauthToken !== undefined) resolve({ status: 'success', message: 'GitHub datasource authenticated', title: "Success" });else reject({ status: 'error', message: 'Not authenticated' });
             });
           }
         }, {
@@ -140,7 +147,7 @@ System.register(['lodash'], function (_export, _context) {
         }, {
           key: 'buildQueryParameters',
           value: function buildQueryParameters(options) {
-            var _this = this;
+            var _this2 = this;
 
             //remove placeholder targets
             options.targets = _.filter(options.targets, function (target) {
@@ -149,7 +156,7 @@ System.register(['lodash'], function (_export, _context) {
 
             var targets = _.map(options.targets, function (target) {
               return {
-                target: _this.templateSrv.replace(target.target, options.scopedVars, 'regex'),
+                target: _this2.templateSrv.replace(target.target, options.scopedVars, 'regex'),
                 refId: target.refId,
                 hide: target.hide,
                 type: target.type || 'timeserie'
